@@ -1,0 +1,344 @@
+-- PYTHON 🇷🇺 Universal Script - Compatible with Delta, Arceus, Krnl, etc.
+-- Detects executor automatically and works on all
+
+local Success, Result = pcall(function()
+    -- الكشف التلقائي عن الهاك المستخدم
+    local Executor = "Unknown"
+    
+    if PROTOSMASHER_LOADED then
+        Executor = "ProtoSmasher"
+    elseif syn then
+        Executor = "Synapse X"
+    elseif secure_load then
+        Executor = "Sentinel"
+    elseif krnl then
+        Executor = "Krnl"
+    elseif Peek then
+        Executor = "Arceus X"
+    elseif is_sirhurt_closure then
+        Executor = "SirHurt"
+    elseif OXYGEN_ then
+        Executor = "Oxygen U"
+    elseif getexecutorname then
+        Executor = getexecutorname()
+    elseif identifyexecutor then
+        Executor = identifyexecutor()
+    end
+    
+    return Executor
+end)
+
+local ExecutorName = Success and Result or "Unknown"
+
+-- وظائف متوافقة مع جميع الهاكات
+local function VirtualInput()
+    if syn then
+        return syn.secure_call
+    elseif PROTOSMASHER_LOADED then
+        return protosmasher.secure_call
+    else
+        return function(func, ...)
+            return pcall(func, ...)
+        end
+    end
+end
+
+local function Request(url)
+    local success, result = pcall(function()
+        if syn then
+            return syn.request({Url = url, Method = "GET"}).Body
+        elseif http_request then
+            return http_request({Url = url, Method = "GET"}).Body
+        elseif request then
+            return request({Url = url, Method = "GET"}).Body
+        else
+            return game:HttpGet(url)
+        end
+    end)
+    return success and result or nil
+end
+
+-- الواجهة الرئيسية المتوافقة
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+-- إنشاء الواجهة
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PythonHubUniversal"
+ScreenGui.Parent = player.PlayerGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 450, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -225, 0.5, -175)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 2
+MainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+MainFrame.Parent = ScreenGui
+
+-- عنوان مع اسم الهاك
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Text = "PYTHON 🇷🇺 | " .. ExecutorName
+Title.TextColor3 = Color3.fromRGB(255, 255, 0)
+Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Title.TextScaled = true
+Title.Parent = MainFrame
+
+-- نظام التبويبات
+local Tabs = {
+    "أوامر صمله|🇷🇺",
+    "أوامر تفعيل|🇷🇺", 
+    "أوامر عشوائيه|🇷🇺",
+    "سكربتات صمله|🇷🇺",
+    "سكربتات كودكس|🇷🇺",
+    "سكربتات من صنعي|🇷🇺"
+}
+
+local TabButtons = {}
+local TabFrames = {}
+
+for i, tabName in pairs(Tabs) do
+    -- زر التبويب
+    local TabButton = Instance.new("TextButton")
+    TabButton.Size = UDim2.new(1/#Tabs, -2, 0, 30)
+    TabButton.Position = UDim2.new((i-1)/#Tabs, 0, 0, 40)
+    TabButton.Text = tabName
+    TabButton.TextColor3 = Color3.white
+    TabButton.BackgroundColor3 = i == 1 and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(60, 60, 60)
+    TabButton.BorderSizePixel = 0
+    TabButton.Parent = MainFrame
+    
+    -- إطار التبويب
+    local TabFrame = Instance.new("ScrollingFrame")
+    TabFrame.Size = UDim2.new(1, 0, 1, -70)
+    TabFrame.Position = UDim2.new(0, 0, 0, 70)
+    TabFrame.BackgroundTransparency = 1
+    TabFrame.ScrollBarThickness = 4
+    TabFrame.Visible = i == 1
+    TabFrame.Parent = MainFrame
+    
+    TabButtons[i] = TabButton
+    TabFrames[i] = TabFrame
+    
+    TabButton.MouseButton1Click:Connect(function()
+        for j, frame in pairs(TabFrames) do
+            frame.Visible = j == i
+        end
+        for j, button in pairs(TabButtons) do
+            button.BackgroundColor3 = j == i and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(60, 60, 60)
+        end
+    end)
+end
+
+-- وظيفة إنشاء أزرار الأوامر
+local function CreateCommandButton(parent, text, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.9, 0, 0, 35)
+    button.Position = UDim2.new(0.05, 0, 0, #parent:GetChildren() * 40)
+    button.Text = text
+    button.TextColor3 = Color3.white
+    button.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    button.BorderSizePixel = 0
+    button.TextScaled = true
+    button.Parent = parent
+    
+    button.MouseButton1Click:Connect(function()
+        pcall(callback)
+    end)
+    
+    parent.CanvasSize = UDim2.new(0, 0, 0, #parent:GetChildren() * 40)
+end
+
+-- 🔹 التبويب 1: أوامر صمله
+local tab1 = TabFrames[1]
+
+CreateCommandButton(tab1, "AutoKeypress W", function()
+    -- متوافق مع جميع الهاكات
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        pcall(function()
+            if connection then
+                VirtualInput()(function()
+                    game:GetService("VirtualInputManager"):SendKeyEvent(true, "W", false, game)
+                    wait(0.1)
+                    game:GetService("VirtualInputManager"):SendKeyEvent(false, "W", false, game)
+                end)
+            end
+        end)
+    end)
+end)
+
+CreateCommandButton(tab1, "Anti-AFK", function()
+    -- نظام Anti-AFK متوافق
+    local afkConnection
+    afkConnection = RunService.Heartbeat:Connect(function()
+        pcall(function()
+            local virtualUser = game:GetService("VirtualUser")
+            virtualUser:CaptureController()
+            virtualUser:ClickButton2(Vector2.new())
+        end)
+    end)
+end)
+
+CreateCommandButton(tab1, "No Fog", function()
+    game:GetService("Lighting").FogEnd = 999999
+end)
+
+CreateCommandButton(tab1, "Brightness Max", function()
+    game:GetService("Lighting").Brightness = 10
+end)
+
+-- 🔹 التبويب 2: أوامر تفعيل
+local tab2 = TabFrames[2]
+
+CreateCommandButton(tab2, "BANG", function()
+    if player.Character then
+        local explosion = Instance.new("Explosion")
+        explosion.Position = player.Character:FindFirstChild("HumanoidRootPart").Position
+        explosion.BlastPressure = 100000
+        explosion.Parent = workspace
+    end
+end)
+
+CreateCommandButton(tab2, "FLING", function()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.Velocity = Vector3.new(10000, 10000, 10000)
+    end
+end)
+
+-- 🔹 التبويب 3: أوامر عشوائية
+local tab3 = TabFrames[3]
+
+CreateCommandButton(tab3, "SIT", function()
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.Sit = true
+    end
+end)
+
+CreateCommandButton(tab3, "SPIN", function()
+    local spinning = true
+    spawn(function()
+        while spinning and player.Character and player.Character:FindFirstChild("HumanoidRootPart") do
+            player.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(30), 0)
+            RunService.Heartbeat:Wait()
+        end
+    end)
+end)
+
+-- 🔹 التبويب 4: سكربتات صمله
+local tab4 = TabFrames[4]
+
+CreateCommandButton(tab4, "Infinite Yield", function()
+    loadstring(Request("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
+
+CreateCommandButton(tab4, "Anti-AFK Script", function()
+    loadstring(Request("https://raw.githubusercontent.com/FilteringEnabled/F-AntiAFK/main/F-AntiAFK"))()
+end)
+
+-- 🔹 التبويب 5: سكربتات كودكس
+local tab5 = TabFrames[5]
+
+CreateCommandButton(tab5, "C00LKID", function()
+    loadstring(Request("https://raw.githubusercontent.com/laderite/coolkid/main/main.lua"))()
+end)
+
+-- 🔹 التبويب 6: سكربتات من صنعي
+local tab6 = TabFrames[6]
+
+CreateCommandButton(tab6, "🎯 Anti-AFK Pro", function()
+    -- نظام Anti-AFK متقدم
+    local afkGui = Instance.new("ScreenGui")
+    afkGui.Name = "PythonAntiAFKPro"
+    afkGui.Parent = player.PlayerGui
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 200, 0, 100)
+    frame.Position = UDim2.new(0, 50, 0, 50)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+    frame.Parent = afkGui
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Text = "Anti-AFK Pro\nPYTHON 🇷🇺\nStatus: Active"
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.BackgroundTransparency = 1
+    label.TextScaled = true
+    label.Parent = frame
+    
+    -- نظام Anti-AFK
+    local afkConnection
+    afkConnection = RunService.Heartbeat:Connect(function()
+        pcall(function()
+            local virtualUser = game:GetService("VirtualUser")
+            virtualUser:CaptureController()
+            virtualUser:ClickButton2(Vector2.new())
+        end)
+    end)
+end)
+
+CreateCommandButton(tab6, "⏱️ Time Counter", function()
+    -- عداد الوقت
+    local timeGui = Instance.new("ScreenGui")
+    timeGui.Name = "PythonTimeCounter"
+    timeGui.Parent = player.PlayerGui
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 180, 0, 120)
+    frame.Position = UDim2.new(0, 100, 0, 100)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+    frame.Parent = timeGui
+    
+    local startTime = tick()
+    
+    local timeLabel = Instance.new("TextLabel")
+    timeLabel.Size = UDim2.new(1, 0, 1, 0)
+    timeLabel.Text = "00:00:00"
+    timeLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    timeLabel.BackgroundTransparency = 1
+    timeLabel.TextScaled = true
+    timeLabel.Parent = frame
+    
+    RunService.Heartbeat:Connect(function()
+        local elapsed = tick() - startTime
+        local hours = math.floor(elapsed / 3600)
+        local minutes = math.floor((elapsed % 3600) / 60)
+        local seconds = math.floor(elapsed % 60)
+        timeLabel.Text = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+    end)
+end)
+
+-- نظام السحب والإفلات
+local dragging, dragInput, dragStart, startPos = false
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+print("🎯 PYTHON Universal Hub Loaded! | Executor: " .. ExecutorName)
+print("✅ Compatible with: Delta, Arceus, Krnl, Synapse, etc.")
